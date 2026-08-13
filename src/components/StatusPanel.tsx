@@ -1,4 +1,4 @@
-import { Day, formatDay, status } from "../lib/schedule";
+import { Day, formatDay, formatDayShort, status } from "../lib/schedule";
 
 interface Props {
   banked: number | null;
@@ -20,34 +20,55 @@ export function StatusPanel({ banked, today, selected }: Props) {
   }
 
   const s = status(banked, today, selected);
-  const plural = (n: number) => (n === 1 ? "video" : "videos");
+  const videos = (n: number) => (n === 1 ? "video" : "videos");
+
+  const verdict =
+    s.kind === "behind"
+      ? `Film ${s.need} more`
+      : s.kind === "ahead"
+        ? `Ahead by ${s.surplus}`
+        : "On schedule";
 
   return (
     <section className={`status-panel ${s.kind}`}>
-      <h3>{formatDay(selected)}</h3>
-      {s.kind === "behind" && (
-        <p>
-          This release is <strong>{s.releasesOut}</strong> {plural(s.releasesOut)} out. You
-          currently have <strong>{banked}</strong> {plural(banked)} ready. You need to film an
-          additional <strong>{s.need}</strong> {plural(s.need)} in the next{" "}
-          <strong>{s.daysLeft}</strong> {s.daysLeft === 1 ? "day" : "days"} to have one for this
-          date <em>(film by {formatDay(s.filmBy)} to leave time for editing)</em>.
-        </p>
-      )}
-      {s.kind === "ahead" && (
-        <p>
-          This release is <strong>{s.releasesOut}</strong> {plural(s.releasesOut)} out. You have{" "}
-          <strong>{banked}</strong> {plural(banked)} ready. You're ahead of schedule by{" "}
-          <strong>{s.surplus}</strong> {plural(s.surplus)}.
-        </p>
-      )}
-      {s.kind === "onSchedule" && (
-        <p>
-          This release is <strong>{s.releasesOut}</strong> {plural(s.releasesOut)} out and you
-          have exactly <strong>{banked}</strong> {plural(banked)} ready. You're on schedule — no
-          filming needed for this date.
-        </p>
-      )}
+      <header className="status-header">
+        <h3>{formatDay(selected)}</h3>
+        <span className="verdict-pill">{verdict}</span>
+      </header>
+
+      <dl className="stats">
+        <div className="stat">
+          <dt>Releases out</dt>
+          <dd>{s.releasesOut}</dd>
+        </div>
+        <div className="stat">
+          <dt>Videos ready</dt>
+          <dd>{banked}</dd>
+        </div>
+        {s.kind === "behind" && (
+          <>
+            <div className="stat">
+              <dt>Still to film</dt>
+              <dd>{s.need}</dd>
+            </div>
+            <div className="stat wide">
+              <dt>Film by</dt>
+              <dd>{formatDayShort(s.filmBy)}</dd>
+            </div>
+          </>
+        )}
+      </dl>
+
+      <p className="status-note">
+        {s.kind === "behind" &&
+          `Film ${s.need} more ${videos(s.need)} in the next ${s.daysLeft} ${
+            s.daysLeft === 1 ? "day" : "days"
+          } to stay on schedule. The film-by date leaves time for editing.`}
+        {s.kind === "ahead" &&
+          `You're ahead of schedule by ${s.surplus} ${videos(s.surplus)} for this date.`}
+        {s.kind === "onSchedule" &&
+          "Exactly enough banked — no filming needed for this date."}
+      </p>
     </section>
   );
 }

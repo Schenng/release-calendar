@@ -111,3 +111,8 @@ export function monthName(month: number): string {
 export function formatDay(d: Day): string {
   return `${WEEKDAYS[dayOfWeek(d)]}, ${monthName(d.month)} ${d.day}`;
 }
+
+/** e.g. "Thu, Dec 10" */
+export function formatDayShort(d: Day): string {
+  return `${WEEKDAYS[dayOfWeek(d)].slice(0, 3)}, ${monthName(d.month).slice(0, 3)} ${d.day}`;
+}
