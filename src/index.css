@@ -1,0 +1,205 @@
+:root {
+  --bg: #f7f7f5;
+  --panel: #ffffff;
+  --ink: #1c1c1c;
+  --muted: #8a8a86;
+  --line: #e4e4e0;
+  --accent: #4453d6;
+  --green-bg: #e3f4e6;
+  --green-ink: #1d6b2f;
+  --red-bg: #fdeaea;
+  --red-ink: #a33030;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.tagline {
+  color: var(--muted);
+  margin: 4px 0 20px;
+}
+
+/* Banked count input */
+.banked-input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.banked-input input {
+  font-size: 1.25rem;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  width: 100%;
+}
+
+.banked-input input:focus {
+  outline: 2px solid var(--accent);
+  border-color: transparent;
+}
+
+/* Calendar */
+.calendar {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.calendar-header h2 {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.calendar-header button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.weekday-label {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 4px 0;
+}
+
+.day-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.day-cell.today .day-number {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 700;
+}
+
+/* Future release days: clickable buttons */
+button.day-cell {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 600;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+button.day-cell.covered {
+  background: var(--green-bg);
+  color: var(--green-ink);
+  border-color: transparent;
+}
+
+button.day-cell.uncovered {
+  background: var(--red-bg);
+  color: var(--red-ink);
+  border-color: transparent;
+}
+
+button.day-cell.selected {
+  outline: 2px solid var(--accent);
+}
+
+.badge {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  opacity: 0.75;
+}
+
+.legend {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 12px 2px 0;
+}
+
+/* Status panel */
+.status-hint {
+  color: var(--muted);
+  margin-top: 20px;
+  text-align: center;
+}
+
+.status-panel {
+  margin-top: 20px;
+  border-radius: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  line-height: 1.5;
+}
+
+.status-panel h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.status-panel p {
+  margin: 0;
+}
+
+.status-panel.behind {
+  background: var(--red-bg);
+  border-color: transparent;
+}
+
+.status-panel.ahead,
+.status-panel.onSchedule {
+  background: var(--green-bg);
+  border-color: transparent;
+}
