@@ -1,101 +1,111 @@
-# V1 Implementation Plan — Film Calendar
+# V1 Implementation — Film Calendar (✅ complete)
 
-Scope: the stateless MVP from [PLAN.md](PLAN.md). Fully client-side, no backend,
-no persistence. Deployed as a static site on Vercel (already hooked up).
+The stateless MVP from [PLAN.md](PLAN.md), as built. Fully client-side, no
+backend, no persistence. Static Vite build, deployable on Vercel.
 
 ## Stack
-- **Vite + React + TypeScript.** Vercel auto-detects Vite and builds/deploys with
-  zero config. React keeps the calendar grid + status panel trivial to render,
-  and the structure grows cleanly into v2 (login/persistence) later.
-- **No UI framework needed** — one page, hand-rolled CSS (or Tailwind if preferred).
-- **No router, no state library.** Two pieces of state: `bankedCount` and
-  `selectedDate` (plus the visible month for navigation). `useState` covers it.
+- **Vite + React + TypeScript.** Vercel auto-detects Vite; zero config.
+- Hand-rolled CSS in `src/index.css` — no UI framework.
+- No router, no state library. State is `bankedCount` (text input), `selectedDate`,
+  and the visible month — all `useState` in `App.tsx`.
 
-## Project structure
+## Project structure (as built)
 ```
 src/
   lib/
     schedule.ts        # all date/release math — pure functions, no DOM
-    schedule.test.ts   # unit tests for the math
+    schedule.test.ts   # 18 unit tests (Vitest)
   components/
-    BankedInput.tsx    # "How many episodes are banked?" number input
-    Calendar.tsx       # month grid + prev/next month navigation
-    DayCell.tsx        # one day; knows if it's a release day / past / selected
-    StatusPanel.tsx    # the behind/ahead/on-schedule message
+    BankedInput.tsx    # "Episodes banked" number input
+    Calendar.tsx       # month grid + prev/next navigation
+    DayCell.tsx        # one day; release/past/selected/covered states
+    StatusPanel.tsx    # verdict pill + stat tiles for the selected release
   App.tsx
   main.tsx
 index.html
+.npmrc                 # points this project at the public npm registry
+.claude/launch.json    # dev-server config (npm run dev, port 5173)
 ```
 
 ## Core logic (`schedule.ts`)
-Pure functions, all operating on **local dates** (year/month/day triples or
-date-only strings — never raw `Date` math across timezones/DST):
+Pure functions on calendar dates (`{year, month, day}`) computed via UTC
+timestamps — identical results in every timezone, immune to DST:
 
-- `isReleaseDay(date)` — Monday or Thursday.
-- `nextRelease(today)` — first release slot **strictly after** today. (A release
-  dated today is treated as already out; simple and unambiguous.)
-- `releasesOut(today, target)` — count of release slots from `nextRelease(today)`
-  through `target`, inclusive. Target is guaranteed to be a future release day
-  by the UI.
-- `daysUntil(today, target)`.
-- `status(bankedCount, today, target)` → one of:
-  - `{ kind: "behind", releasesOut, need, daysLeft }` where `need = releasesOut − banked`
-  - `{ kind: "ahead", releasesOut, surplus }`
-  - `{ kind: "onSchedule", releasesOut }` when `deficit === 0`
+- `isReleaseDay(d)` — Monday or Thursday.
+- `nextRelease(today)` — first slot **strictly after** today (a release dated
+  today is treated as already out).
+- `releasesOut(today, target)` — slots from `nextRelease(today)` through
+  `target`, inclusive; throws on non-release or non-future targets.
+- `status(banked, today, target)` → discriminated union:
+  - `behind`: `need`, `daysLeft`, and `filmBy = target − EDIT_LEAD_DAYS (2)`
+  - `ahead`: `surplus`
+  - `onSchedule` (exact zero deficit — its own state, not "ahead by 0")
+- Formatting helpers: `formatDay` ("Thursday, December 10"), `formatDayShort`
+  ("Thu, Dec 10"), `monthName`.
 
-Note: PLAN.md's edit-lead-time refinement (`D − 2 days` filming deadline) affects
-the *wording* of days remaining. For v1, show `daysLeft` to the release date and
-add "(film by <D − 2 days>)" in the behind message — it's one subtraction, no
-extra model complexity.
+## UI behavior (as built)
+1. **Banked count input** at the top. Empty/invalid input → calendar renders,
+   but selecting a date shows an "enter your banked count" hint instead of a status.
+2. **Month grid**, weeks starting Sunday, ‹ › month navigation.
+3. **Day cells:** future Mon/Thu are buttons; each carries a badge with its
+   `releasesOut` number and is tinted green (`banked ≥ releasesOut`) or red.
+   Past days, today, and non-release days are inert; today is underlined.
+4. **Clicking a release day** selects it (click again to deselect) and shows the
+   **StatusPanel**: date + verdict pill ("Film N more" / "Ahead by N" /
+   "On schedule"), stat tiles (Releases out, Videos ready, and when behind:
+   Still to film, plus a full-width Film-by tile), and a one-line footnote.
+   The film-by date subtracts the 2-day edit lead time.
 
-## UI behavior
-1. **Banked count input** pinned at the top. Empty/invalid input → calendar still
-   renders but release days show "enter your banked count" instead of a status.
-   Count is a non-negative integer; clamp/reject anything else.
-2. **Month grid** for the current month, with ‹ › navigation. Weeks start Sunday
-   (or Monday — pick one, cosmetic).
-3. **Day cells:**
-   - Release days (Mon/Thu) in the future: visually highlighted, clickable.
-   - Past days and non-release days: rendered flat, not clickable (v1 rule from PLAN.md).
-   - Today gets a subtle marker.
-4. **Clicking a future release day** selects it and shows the StatusPanel with
-   the behind/ahead/on-schedule message. Clicking another day moves the selection.
-5. **Bonus (cheap, high value):** on release-day cells, render a small badge with
-   that date's `releasesOut` number so the whole month reads at a glance.
-   Optionally color cells green/red based on whether `banked ≥ releasesOut`.
+## Testing & verification
+- `npm test` — 18 Vitest cases over `schedule.ts`: slot counting from every
+  weekday, far-future counts, behind/ahead/exact-zero, rejection of invalid
+  targets, DST-spanning ranges, formatting.
+- Verified live in the browser: all three status states, badge/coloring
+  correctness (hand-checked December counts), month navigation, and mobile
+  (375px) layout.
 
-## Edge cases to handle
-- Today is a release day → it counts as already released; `nextRelease` skips it.
-- `deficit === 0` → distinct "on schedule, no filming needed" message (from the
-  original spec), not "ahead by 0".
-- Banked count larger than any visible deficit → every visible release shows ahead.
-- Month navigation far into the future must stay correct (the math is pure
-  counting, so it will — cover with tests).
-- DST boundaries: avoided entirely by using date-only arithmetic, verified by a
-  test spanning a DST transition.
+## Running it
+- `npm run dev` — dev server on port 5173.
+- `npm test` — unit tests.
+- `npm run build` — typecheck + production build to `dist/`.
 
-## Testing
-- **Vitest** unit tests for `schedule.ts` only — that's where all correctness
-  risk lives. Table-driven cases: each weekday as "today", targets 1 and many
-  slots out, deficit/ahead/exact-zero, DST-spanning range.
-- UI is simple enough to verify manually; no component tests in v1.
+## Notes / deviations from the original plan
+- **Status message became a panel, not prose** — a verdict pill + stat tiles
+  replaced the paragraph message for readability; the Film-by tile sits on its
+  own row to avoid overflow.
+- **`.npmrc` was required** — the machine's npm defaults to a private company
+  registry; this project pins the public registry locally.
+- **Deployment:** the folder has no git repo or Vercel link in it. The build is
+  a static `dist/` that Vercel auto-detects; hook up the repo/CLI and it ships
+  as-is.
 
-## Deployment
-- Standard Vite build (`npm run build` → `dist/`). Vercel auto-detects; no
-  `vercel.json` needed.
-- Static output only — confirms the "no backend" constraint at deploy time.
+## V2 — Supabase authentication (✅ implemented)
+V2 is **auth only** — sign up / log in / log out. No data is persisted yet;
+the calendar keeps its v1 behavior and stays usable logged in or out.
 
-## Build order
-1. Scaffold Vite + React + TS; commit the clean scaffold.
-2. Write `schedule.ts` + tests; get the math green first.
-3. Calendar grid + month navigation, release-day highlighting.
-4. Banked input + StatusPanel wired to `status()`.
-5. Badges/coloring polish, empty-input state, mobile-width pass.
-6. Deploy to Vercel and sanity-check the live date math (device timezone).
+- Supabase project: `fotxyopxsqnvrqbizmpk`
+  (`https://fotxyopxsqnvrqbizmpk.supabase.co`). Client config lives in
+  `.env.local` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) — the
+  publishable key is client-safe by design. **Set the same vars in Vercel's
+  project settings for deploys.**
+- `src/lib/supabase.ts` — shared `@supabase/supabase-js` client; throws early
+  with a clear message if the env vars are missing.
+- `src/components/AuthPanel.tsx` — header UI: logged out shows a "Sign in"
+  button that opens a **modal** (dimmed backdrop; closes on ×, backdrop click,
+  Escape, or successful sign-in) with Sign in / Sign up tabs (email + password,
+  min 6 chars); logged in shows the user's email + Sign out. Sign-up without an
+  immediate session shows "Check your email for a confirmation link" (Supabase
+  email confirmation is on by default).
+- `App.tsx` holds the `Session` state: `getSession()` on mount plus an
+  `onAuthStateChange` subscription.
+- Verified: UI states render, tests/build pass, and the project's auth API
+  answers with the configured key (`/auth/v1/health` → 200). The live
+  signup → confirm-email → sign-in loop needs a real inbox, so that final
+  pass is manual.
 
-## Acceptance criteria
-- Entering a banked count and clicking any future Mon/Thu shows a correct
-  behind / ahead / on-schedule message.
-- Non-release days and past days are inert.
-- Refreshing the page resets everything (expected — no storage by design).
-- Works on a phone screen.
+Deferred to V3 (persistence + blackouts):
+- Banked count and blackout dates saved per user; count stored with an "as of"
+  date and a staleness prompt (never auto-decremented).
+- Blackout marking makes non-release days interactive — `DayCell` already
+  branches on `clickable`, so that's the extension point.
+- Reachability math belongs in `schedule.ts` beside the existing functions.

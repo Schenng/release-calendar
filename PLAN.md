@@ -28,17 +28,31 @@ Refinement (uses the facts below): an episode takes ~1–2 days to edit after
 filming, so the *filming* deadline for release `D` is really `D − 2 days`. The
 "behind" message should count days to that deadline, not to `D` itself.
 
-## MVP (v1)
+## MVP (v1) — ✅ complete
 - Single-page web app, fully client-side — **no storage layer, no backend, no sync**.
 - On load, the user types in **episodes currently banked**; the UI is immediately
   usable from there. Nothing persists between visits.
 - Month-view calendar; Mondays/Thursdays visually marked as release days, and
   they are the only interactive days in v1.
-- Click any future release date → the status message above.
+- Click any future release date → status panel with a verdict pill ("Film N more" /
+  "Ahead by N" / "On schedule") and stat tiles instead of a prose message.
+- Each release-day cell shows a badge with how many releases out it is, colored
+  green/red by whether the banked count covers it.
+- See [IMPLEMENTATION.md](IMPLEMENTATION.md) for the as-built details.
 
-## v2 — Persistence, login, blackout dates
-- Add user accounts and a storage layer: users log in and their **banked episode
-  count** and **blackout dates** are saved between visits.
+## v2 — User authentication (Supabase) — ✅ implemented
+- **Auth only** — no data persistence yet. Users can sign up, log in, and log
+  out; the calendar UI itself still works exactly as in v1 (banked count typed
+  in per visit).
+- Backed by **Supabase Auth**, project already created:
+  - Project ID: `fotxyopxsqnvrqbizmpk` (URL: `https://fotxyopxsqnvrqbizmpk.supabase.co`)
+  - Publishable key: `sb_publishable_dY63_yR4wVrMqqiZK5Z5fA_WwSYBAhe`
+    (safe for client-side use by design; lives in `.env.local` as Vite env vars)
+- Sets up the account foundation that v3 persistence attaches to.
+
+## v3 — Persistence + blackout dates
+- Store each logged-in user's **banked episode count** and **blackout dates**
+  in Supabase, saved between visits.
 - Non-release days become clickable too, so any day or range can be marked as
   **blackout** (vacation, busy).
 - Because the count now persists but is only updated manually, a saved count
@@ -51,19 +65,20 @@ filming, so the *filming* deadline for release `D` is really `D − 2 days`. The
 - Warnings like (illustrative): *"To stay on schedule through your Dec 5–15
   vacation, you need 4 episodes banked by Dec 3."*
 
-## v3 (stretch) — Calendar integration
+## v4 (stretch) — Calendar integration
 - Pull both hosts' availability (e.g., Google Calendar) and auto-derive blackout
   dates from days that are already busy, instead of entering them by hand.
-  This extends v2's blackout feature — days both hosts are free remain the
+  This extends v3's blackout feature — days both hosts are free remain the
   implicit filming windows.
 
 ## Facts & decisions
-1. **Episodes per shoot day:** variable, 1–N (usually 1 or 2) — used by v2's
+1. **Episodes per shoot day:** variable, 1–N (usually 1 or 2) — used by v3's
    reachability check.
 2. **Edit lead time:** ~1–2 days from filmed to release-ready — filming deadlines
    sit ~2 days before the release they cover.
 3. **Storage:** none in v1 — the user enters the banked count each visit and the
-   UI works from that input alone. Persistence and login arrive in v2.
-4. **Banked count:** entered and updated manually; never auto-decremented. In v2
+   UI works from that input alone. Login (Supabase Auth) arrives in v2, auth
+   only; persistence of the banked count and blackout dates arrives in v3.
+4. **Banked count:** entered and updated manually; never auto-decremented. In v3
    the app may *prompt* for an update when the saved count looks stale, but the
    change is always the user's.
