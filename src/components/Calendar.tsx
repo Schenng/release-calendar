@@ -7,6 +7,7 @@ import {
   monthName,
   releasesOut,
   sameDay,
+  toISO,
 } from "../lib/schedule";
 
 interface Props {
@@ -16,13 +17,23 @@ interface Props {
   onNavigate: (v: { year: number; month: number }) => void;
   selected: Day | null;
   onSelect: (day: Day) => void;
+  /** ISO date → episode name, for logged-in users. */
+  episodesByDate?: Map<string, string>;
 }
 
 function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-export function Calendar({ today, banked, visible, onNavigate, selected, onSelect }: Props) {
+export function Calendar({
+  today,
+  banked,
+  visible,
+  onNavigate,
+  selected,
+  onSelect,
+  episodesByDate,
+}: Props) {
   const { year, month } = visible;
   const firstDow = dayOfWeek({ year, month, day: 1 });
   const total = daysInMonth(year, month);
@@ -71,6 +82,7 @@ export function Calendar({ today, banked, visible, onNavigate, selected, onSelec
               releasesOut={clickable ? releasesOut(today, day) : null}
               banked={banked}
               selected={selected !== null && sameDay(day, selected)}
+              episodeName={episodesByDate?.get(toISO(day)) ?? null}
               onClick={() => onSelect(day)}
             />
           );

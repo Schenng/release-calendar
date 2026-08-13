@@ -4,10 +4,13 @@ import {
   Day,
   daysUntil,
   formatDay,
+  fromISO,
   isReleaseDay,
   nextRelease,
   releasesOut,
   status,
+  toISO,
+  upcomingReleases,
 } from "./schedule";
 
 const d = (year: number, month: number, day: number): Day => ({ year, month, day });
@@ -102,5 +105,28 @@ describe("status", () => {
 describe("formatDay", () => {
   it("formats with weekday and month", () => {
     expect(formatDay(d(2026, 12, 10))).toBe("Thursday, December 10");
+  });
+});
+
+describe("ISO round-trip", () => {
+  it("pads and parses", () => {
+    expect(toISO(d(2026, 8, 5))).toBe("2026-08-05");
+    expect(fromISO("2026-08-05")).toEqual(d(2026, 8, 5));
+    expect(fromISO(toISO(d(2026, 12, 31)))).toEqual(d(2026, 12, 31));
+  });
+});
+
+describe("upcomingReleases", () => {
+  it("lists slots strictly after today, alternating Mon/Thu", () => {
+    expect(upcomingReleases(THU, 4)).toEqual([
+      d(2026, 8, 17),
+      d(2026, 8, 20),
+      d(2026, 8, 24),
+      d(2026, 8, 27),
+    ]);
+  });
+
+  it("returns exactly count slots", () => {
+    expect(upcomingReleases(d(2026, 8, 12), 16)).toHaveLength(16);
   });
 });

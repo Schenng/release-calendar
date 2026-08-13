@@ -116,3 +116,26 @@ export function formatDay(d: Day): string {
 export function formatDayShort(d: Day): string {
   return `${WEEKDAYS[dayOfWeek(d)].slice(0, 3)}, ${monthName(d.month).slice(0, 3)} ${d.day}`;
 }
+
+/** e.g. "2026-12-10" (Postgres `date` wire format) */
+export function toISO(d: Day): string {
+  const mm = String(d.month).padStart(2, "0");
+  const dd = String(d.day).padStart(2, "0");
+  return `${d.year}-${mm}-${dd}`;
+}
+
+export function fromISO(s: string): Day {
+  const [year, month, day] = s.split("-").map(Number);
+  return { year, month, day };
+}
+
+/** The next `count` release slots strictly after `today`, in order. */
+export function upcomingReleases(today: Day, count: number): Day[] {
+  const out: Day[] = [];
+  let d = today;
+  for (let i = 0; i < count; i++) {
+    d = nextRelease(d);
+    out.push(d);
+  }
+  return out;
+}

@@ -79,7 +79,7 @@ timestamps — identical results in every timezone, immune to DST:
   a static `dist/` that Vercel auto-detects; hook up the repo/CLI and it ships
   as-is.
 
-## V2 — Supabase authentication (✅ implemented)
+## V2 — Supabase authentication (✅ complete)
 V2 is **auth only** — sign up / log in / log out. No data is persisted yet;
 the calendar keeps its v1 behavior and stays usable logged in or out.
 
@@ -103,9 +103,17 @@ the calendar keeps its v1 behavior and stays usable logged in or out.
   signup → confirm-email → sign-in loop needs a real inbox, so that final
   pass is manual.
 
-Deferred to V3 (persistence + blackouts):
-- Banked count and blackout dates saved per user; count stored with an "as of"
-  date and a staleness prompt (never auto-decremented).
-- Blackout marking makes non-release days interactive — `DayCell` already
-  branches on `clickable`, so that's the extension point.
-- Reachability math belongs in `schedule.ts` beside the existing functions.
+## V3 pointers (next up, per PLAN.md)
+V3 replaces the banked *count* with banked *episodes* for logged-in users —
+named records with an optional Mon/Thu release-date assignment, CRUD'd from an
+Episodes tab and stored in Supabase (owner-only RLS). The calendar shows
+assigned episode names and derives the schedule math from the episode pool.
+See PLAN.md's v3 section for the full rules (one episode per date, future
+dates only, past-dated episodes count as released).
+
+Code touchpoints:
+- Status math generalizes in `schedule.ts`: covered slots (assigned) vs. the
+  unassigned pool, replacing the single `banked` number when logged in.
+- Logged-out keeps the v1 `BankedInput` path unchanged.
+- Blackout dates moved to V4; `DayCell`'s `clickable` branch stays the
+  extension point for marking non-release days.
