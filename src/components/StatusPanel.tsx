@@ -1,12 +1,38 @@
-import { Day, formatDay, formatDayShort, status } from "../lib/schedule";
+import { useState } from "react";
+import { Episode } from "../hooks/useEpisodes";
+import {
+  Day,
+  formatDay,
+  formatDayShort,
+  status,
+  statusWithAssignments,
+} from "../lib/schedule";
 
 interface Props {
   banked: number | null;
   today: Day;
   selected: Day | null;
+  /** Episode assigned to the selected date, if any (logged in). */
+  episode?: Episode | null;
+  /** Unassigned episodes offered for assignment to the selected date (logged in). */
+  unassigned?: Episode[];
+  /** ISO dates that have an assigned episode; enables assignment-aware math. */
+  assignedDates?: ReadonlySet<string>;
+  onAssign?: (episodeId: string) => void;
+  onUnassign?: (episodeId: string) => void;
 }
 
-export function StatusPanel({ banked, today, selected }: Props) {
+export function StatusPanel({
+  banked,
+  today,
+  selected,
+  episode,
+  unassigned,
+  assignedDates,
+  onAssign,
+  onUnassign,
+}: Props) {
+  const [assignId, setAssignId] = useState("");
   if (!selected) {
     return <p className="status-hint">Select a release date to see where you stand.</p>;
   }
@@ -19,7 +45,9 @@ export function StatusPanel({ banked, today, selected }: Props) {
     );
   }
 
-  const s = status(banked, today, selected);
+  const s = assignedDates
+    ? statusWithAssignments(unassigned?.length ?? 0, assignedDates, today, selected)
+    : status(banked, today, selected);
   const videos = (n: number) => (n === 1 ? "video" : "videos");
 
   const verdict =
@@ -36,6 +64,49 @@ export function StatusPanel({ banked, today, selected }: Props) {
         <span className="verdict-pill">{verdict}</span>
       </header>
 
+      {episode && (
+        <p className="status-episode">
+          Scheduled episode: <strong>{episode.name}</strong>
+          {onUnassign && (
+            <button
+              type="button"
+              className="auth-link unassign"
+              onClick={() => onUnassign(episode.id)}
+            >
+              Remove
+            </button>
+          )}
+        </p>
+      )}
+
+      {!episode && onAssign && unassigned && unassigned.length > 0 && (
+        <div className="assign-row">
+          <select
+            value={assignId}
+            onChange={(e) => setAssignId(e.target.value)}
+            aria-label="Episode to assign"
+          >
+            <option value="">Choose episode…</option>
+            {unassigned.map((ep) => (
+              <option key={ep.id} value={ep.id}>
+                {ep.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="auth-submit"
+            disabled={assignId === ""}
+            onClick={() => {
+              onAssign(assignId);
+              setAssignId("");
+            }}
+          >
+            Assign to this date
+          </button>
+        </div>
+      )}
+
       <dl className="stats">
         <div className="stat">
           <dt>Releases out</dt>
@@ -45,6 +116,12 @@ export function StatusPanel({ banked, today, selected }: Props) {
           <dt>Videos ready</dt>
           <dd>{banked}</dd>
         </div>
+        {assignedDates && (
+          <div className="stat">
+            <dt>Unassigned</dt>
+            <dd>{unassigned?.length ?? 0}</dd>
+          </div>
+        )}
         {s.kind === "behind" && (
           <>
             <div className="stat">
@@ -63,11 +140,11 @@ export function StatusPanel({ banked, today, selected }: Props) {
         {s.kind === "behind" &&
           `Film ${s.need} more ${videos(s.need)} in the next ${s.daysLeft} ${
             s.daysLeft === 1 ? "day" : "days"
-          } to stay on schedule. The film-by date leaves time for editing.`}
+          } to stay on schedule through this date. The film-by date leaves time for editing.`}
         {s.kind === "ahead" &&
           `You're ahead of schedule by ${s.surplus} ${videos(s.surplus)} for this date.`}
         {s.kind === "onSchedule" &&
-          "Exactly enough banked — no filming needed for this date."}
+          "Every release through this date is covered — no filming needed."}
       </p>
     </section>
   );

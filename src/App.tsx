@@ -6,7 +6,7 @@ import { Calendar } from "./components/Calendar";
 import { EpisodesTab, isReleased } from "./components/EpisodesTab";
 import { StatusPanel } from "./components/StatusPanel";
 import { useEpisodes } from "./hooks/useEpisodes";
-import { Day, fromLocalDate, sameDay } from "./lib/schedule";
+import { Day, fromLocalDate, sameDay, toISO } from "./lib/schedule";
 import { supabase } from "./lib/supabase";
 
 type Tab = "calendar" | "episodes";
@@ -36,7 +36,7 @@ export default function App() {
       : null;
 
   const episodesByDate = new Map(
-    episodes.flatMap((e) => (e.release_date !== null ? [[e.release_date, e.name] as const] : [])),
+    episodes.flatMap((e) => (e.release_date !== null ? [[e.release_date, e] as const] : [])),
   );
 
   return (
@@ -99,7 +99,25 @@ export default function App() {
             episodesByDate={session ? episodesByDate : undefined}
           />
 
-          <StatusPanel banked={banked} today={today} selected={selected} />
+          <StatusPanel
+            key={selected ? toISO(selected) : "none"}
+            banked={banked}
+            today={today}
+            selected={selected}
+            episode={
+              session && selected ? (episodesByDate.get(toISO(selected)) ?? null) : null
+            }
+            unassigned={
+              session ? episodes.filter((e) => e.release_date === null) : undefined
+            }
+            assignedDates={session ? new Set(episodesByDate.keys()) : undefined}
+            onAssign={
+              session && selected
+                ? (id) => update(id, { release_date: toISO(selected) })
+                : undefined
+            }
+            onUnassign={session ? (id) => update(id, { release_date: null }) : undefined}
+          />
         </>
       )}
     </main>

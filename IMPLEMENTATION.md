@@ -103,17 +103,46 @@ the calendar keeps its v1 behavior and stays usable logged in or out.
   signup → confirm-email → sign-in loop needs a real inbox, so that final
   pass is manual.
 
-## V3 pointers (next up, per PLAN.md)
-V3 replaces the banked *count* with banked *episodes* for logged-in users —
-named records with an optional Mon/Thu release-date assignment, CRUD'd from an
-Episodes tab and stored in Supabase (owner-only RLS). The calendar shows
-assigned episode names and derives the schedule math from the episode pool.
-See PLAN.md's v3 section for the full rules (one episode per date, future
-dates only, past-dated episodes count as released).
+## V3 — Episodes (✅ implemented; schema applied)
+V3 replaces the banked *count* with banked *episodes* for logged-in users.
+Logged out, the app behaves exactly like v1 (typed count, nothing stored).
 
-Code touchpoints:
-- Status math generalizes in `schedule.ts`: covered slots (assigned) vs. the
-  unassigned pool, replacing the single `banked` number when logged in.
-- Logged-out keeps the v1 `BankedInput` path unchanged.
-- Blackout dates moved to V4; `DayCell`'s `clickable` branch stays the
-  extension point for marking non-release days.
+**Schema:** managed as Supabase CLI migrations in `supabase/migrations/`
+(project is linked to `fotxyopxsqnvrqbizmpk`; apply future changes with
+`supabase migration new <name>` + `supabase db push`). Applied so far:
+- `create_episodes` — the `episodes` table, owner-only RLS policy, and a
+  partial unique index enforcing one episode per release date per user.
+- `episodes_grants` — explicit `GRANT` to the `authenticated` role (tables
+  created via the CLI's login role miss the project's default grants; `anon`
+  intentionally gets nothing).
+
+As built:
+- `src/hooks/useEpisodes.ts` — `Episode` type (`id`, `name`,
+  `release_date: string | null` as ISO) + CRUD against Supabase; reloads the
+  list after each mutation; surfaces errors as a message string.
+- `src/components/EpisodesTab.tsx` — create form (name required, optional
+  release-date select), inline row editing (rename / assign / unassign /
+  reassign), delete with a confirm dialog. The date select offers the next 24
+  Mon/Thu slots minus dates already taken. Episodes whose assigned date has
+  passed (release dated today counts as out, matching v1's rule) move to a
+  dimmed "Released" section — kept as history, still deletable. `isReleased`
+  is exported and reused by `App` for the banked count.
+- `App.tsx` — logged in, a Calendar | Episodes tab bar replaces `BankedInput`;
+  the banked count is derived (`episodes` not yet released) and shown as
+  "N episodes banked" above the calendar. Logged out, the v1 input path is
+  untouched.
+- `Calendar`/`DayCell` — an `episodesByDate` map (ISO date → episode) puts the
+  assigned episode's name inside its release-day cell (truncated, full name on
+  hover). Logged in, only dates with an assigned episode read as filled; the
+  unassigned pool never tints cells. Logged out keeps the v1 count-based tint.
+- Status panel (logged in) — shows the scheduled episode with a Remove
+  (unassign) button, or an assign dropdown of unassigned episodes when the
+  date is empty; uses `statusWithAssignments` (covered slots + unassigned
+  pool; later-dated episodes never fill earlier gaps) instead of the plain
+  count math, plus an "Unassigned" stat tile.
+- `schedule.ts` grew `toISO`/`fromISO`, `upcomingReleases(today, n)`, and
+  `statusWithAssignments`, all unit-tested (27 tests total).
+
+Verified: tests + build pass, logged-out UI unchanged in the browser. The
+logged-in flow needs a signed-in session, so the live CRUD pass is manual
+(after running the schema).

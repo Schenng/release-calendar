@@ -1,4 +1,5 @@
 import { DayCell } from "./DayCell";
+import { Episode } from "../hooks/useEpisodes";
 import {
   compare,
   Day,
@@ -17,8 +18,8 @@ interface Props {
   onNavigate: (v: { year: number; month: number }) => void;
   selected: Day | null;
   onSelect: (day: Day) => void;
-  /** ISO date → episode name, for logged-in users. */
-  episodesByDate?: Map<string, string>;
+  /** ISO date → assigned episode, for logged-in users. */
+  episodesByDate?: Map<string, Episode>;
 }
 
 function daysInMonth(year: number, month: number): number {
@@ -72,6 +73,19 @@ export function Calendar({
           if (!day) return <div key={`blank-${i}`} />;
           const future = compare(day, today) > 0;
           const clickable = future && isReleaseDay(day);
+          const out = clickable ? releasesOut(today, day) : null;
+          const episodeName = episodesByDate?.get(toISO(day))?.name ?? null;
+
+          // Logged in (episodesByDate present): only dates with an assigned
+          // episode read as filled — the unassigned pool never auto-populates
+          // cells. Logged out: tint from the typed banked count, as in v1.
+          let coverage: "covered" | "uncovered" | null = null;
+          if (episodesByDate) {
+            if (clickable && episodeName) coverage = "covered";
+          } else if (clickable && out !== null && banked !== null) {
+            coverage = banked >= out ? "covered" : "uncovered";
+          }
+
           return (
             <DayCell
               key={day.day}
@@ -79,10 +93,10 @@ export function Calendar({
               isToday={sameDay(day, today)}
               isRelease={isReleaseDay(day)}
               clickable={clickable}
-              releasesOut={clickable ? releasesOut(today, day) : null}
-              banked={banked}
+              releasesOut={out}
+              coverage={coverage}
               selected={selected !== null && sameDay(day, selected)}
-              episodeName={episodesByDate?.get(toISO(day)) ?? null}
+              episodeName={episodeName}
               onClick={() => onSelect(day)}
             />
           );

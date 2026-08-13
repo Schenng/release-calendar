@@ -7,7 +7,8 @@ interface Props {
   clickable: boolean;
   /** How many release slots out this date is; null when not a clickable release day. */
   releasesOut: number | null;
-  banked: number | null;
+  /** Green/red tint; null renders the cell neutral. */
+  coverage: "covered" | "uncovered" | null;
   selected: boolean;
   /** Name of the episode assigned to this date, if any (logged-in users). */
   episodeName: string | null;
@@ -20,7 +21,7 @@ export function DayCell({
   isRelease,
   clickable,
   releasesOut,
-  banked,
+  coverage,
   selected,
   episodeName,
   onClick,
@@ -30,9 +31,7 @@ export function DayCell({
   if (isRelease) classes.push("release");
   if (selected) classes.push("selected");
   if (episodeName) classes.push("has-episode");
-  if (clickable && releasesOut !== null && banked !== null) {
-    classes.push(banked >= releasesOut ? "covered" : "uncovered");
-  }
+  if (coverage) classes.push(coverage);
 
   const episode = episodeName && (
     <span className="episode-label" title={episodeName}>

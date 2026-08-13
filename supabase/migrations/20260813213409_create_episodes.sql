@@ -1,4 +1,5 @@
--- V3: episodes table. Run this in the Supabase SQL editor (or via supabase CLI).
+-- V3: episodes table — named banked episodes with an optional Mon/Thu
+-- release-date assignment, owned per user.
 
 create table public.episodes (
   id uuid primary key default gen_random_uuid(),

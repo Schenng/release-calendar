@@ -50,7 +50,7 @@ filming, so the *filming* deadline for release `D` is really `D − 2 days`. The
     (safe for client-side use by design; lives in `.env.local` as Vite env vars)
 - Sets up the account foundation that v3 persistence attaches to.
 
-## v3 — Episodes (persistence for logged-in users)
+## v3 — Episodes (persistence for logged-in users) — ✅ implemented
 The banked *count* becomes banked *episodes*: named records stored in Supabase.
 
 **Logged out:** unchanged v1 behavior — type in a banked count, nothing stored.
@@ -60,10 +60,13 @@ The banked *count* becomes banked *episodes*: named records stored in Supabase.
 ### Calendar tab
 - Same calendar as v1/v2, plus: a release day with an assigned episode shows
   that episode's name on/under the cell.
-- The banked count is now **derived from episodes** instead of typed in:
-  it's simply the **number of unreleased episodes** (unassigned, or assigned
-  to a future date). The v1 status math is unchanged — it just receives this
-  derived number.
+- The banked count is now **derived from episodes** instead of typed in: the
+  **number of unreleased episodes** (unassigned, or assigned to a future date).
+- Status math is **assignment-aware** (added after a real bug: three episodes
+  assigned around a skipped slot reported "on schedule"): a slot with an
+  assigned episode is covered by it; empty slots draw only from the
+  **unassigned pool**; episodes assigned to dates beyond the clicked one are
+  reserved and never fill earlier gaps.
 
 ### Episodes tab
 - List of the user's episodes with create / edit / delete.

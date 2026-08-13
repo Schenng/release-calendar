@@ -9,6 +9,7 @@ import {
   nextRelease,
   releasesOut,
   status,
+  statusWithAssignments,
   toISO,
   upcomingReleases,
 } from "./schedule";
@@ -99,6 +100,53 @@ describe("status", () => {
     const s = status(0, THU, MON);
     expect(s.kind).toBe("behind");
     if (s.kind === "behind") expect(s.need).toBe(1);
+  });
+});
+
+describe("statusWithAssignments", () => {
+  // Slots after THU (2026-08-13): Mon 17, Thu 20, Mon 24, Thu 27, Mon 31.
+  const iso = (day: number) => toISO(d(2026, 8, day));
+
+  it("a skipped slot between assignments is behind by 1 (reported bug)", () => {
+    // Three episodes assigned to slots 1, 2, and 4 — slot 3 (Mon 24) skipped.
+    const assigned = new Set([iso(17), iso(20), iso(27)]);
+    const s = statusWithAssignments(0, assigned, THU, d(2026, 8, 24));
+    expect(s.kind).toBe("behind");
+    if (s.kind === "behind") expect(s.need).toBe(1);
+  });
+
+  it("an unassigned episode fills a skipped slot", () => {
+    const assigned = new Set([iso(17), iso(20), iso(27)]);
+    const s = statusWithAssignments(1, assigned, THU, d(2026, 8, 24));
+    expect(s).toEqual({ kind: "onSchedule", releasesOut: 3 });
+  });
+
+  it("episodes assigned beyond the target don't cover earlier gaps", () => {
+    // Only slot 5 (Mon 31) assigned; clicking slot 2 (Thu 20) with empty pool.
+    const assigned = new Set([iso(31)]);
+    const s = statusWithAssignments(0, assigned, THU, d(2026, 8, 20));
+    expect(s.kind).toBe("behind");
+    if (s.kind === "behind") expect(s.need).toBe(2);
+  });
+
+  it("fully assigned range is on schedule with an empty pool", () => {
+    const assigned = new Set([iso(17), iso(20)]);
+    expect(statusWithAssignments(0, assigned, THU, d(2026, 8, 20))).toEqual({
+      kind: "onSchedule",
+      releasesOut: 2,
+    });
+  });
+
+  it("spare unassigned episodes count as ahead", () => {
+    const assigned = new Set([iso(17)]);
+    const s = statusWithAssignments(3, assigned, THU, d(2026, 8, 20));
+    expect(s).toEqual({ kind: "ahead", releasesOut: 2, surplus: 2 });
+  });
+
+  it("matches plain status when nothing is assigned", () => {
+    expect(statusWithAssignments(2, new Set(), THU, d(2026, 8, 20))).toEqual(
+      status(2, THU, d(2026, 8, 20)),
+    );
   });
 });
 

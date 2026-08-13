@@ -83,7 +83,34 @@ export type Status =
 
 export function status(banked: number, today: Day, target: Day): Status {
   const out = releasesOut(today, target);
-  const deficit = out - banked;
+  return fromDeficit(out - banked, out, today, target);
+}
+
+/**
+ * Assignment-aware status: a slot is covered by its assigned episode; empty
+ * slots draw from the unassigned pool. Episodes assigned to dates beyond
+ * `target` are reserved for those dates and never fill earlier gaps.
+ */
+export function statusWithAssignments(
+  unassignedPool: number,
+  assignedDates: ReadonlySet<string>,
+  today: Day,
+  target: Day,
+): Status {
+  if (!isReleaseDay(target) || compare(target, today) <= 0) {
+    throw new Error("target must be a release day after today");
+  }
+  let slots = 0;
+  let covered = 0;
+  for (let d = nextRelease(today); ; d = nextRelease(d)) {
+    slots++;
+    if (assignedDates.has(toISO(d))) covered++;
+    if (sameDay(d, target)) break;
+  }
+  return fromDeficit(slots - covered - unassignedPool, slots, today, target);
+}
+
+function fromDeficit(deficit: number, out: number, today: Day, target: Day): Status {
   if (deficit > 0) {
     return {
       kind: "behind",

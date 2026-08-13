@@ -45,7 +45,7 @@ function DateSelect({ today, value, taken, onChange }: DateSelectProps) {
       onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
       aria-label="Release date"
     >
-      <option value="">Unassigned</option>
+      <option value="">Choose date</option>
       {options.map((iso) => (
         <option key={iso} value={iso}>
           {formatDayShort(fromISO(iso))}
