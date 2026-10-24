@@ -168,16 +168,16 @@ export function StatusPanel({
       )}
 
       <dl className="stats">
-        {estimatedVideos !== undefined && (
-          <div className="stat">
-            <dt>Estimated videos ready</dt>
-            <dd>{estimatedVideos}</dd>
-          </div>
-        )}
         {assignedDates && (
           <div className="stat">
             <dt>Edited unassigned videos</dt>
             <dd>{unassigned?.length ?? 0}</dd>
+          </div>
+        )}
+        {estimatedVideos !== undefined && (
+          <div className="stat">
+            <dt>Estimated videos ready</dt>
+            <dd>{estimatedVideos}</dd>
           </div>
         )}
         {s.kind === "behind" && (
