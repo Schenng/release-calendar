@@ -169,10 +169,6 @@ export function StatusPanel({
 
       <dl className="stats">
         <div className="stat">
-          <dt>Releases out</dt>
-          <dd>{s.releasesOut}</dd>
-        </div>
-        <div className="stat">
           <dt>Videos ready</dt>
           <dd>{banked}</dd>
         </div>
