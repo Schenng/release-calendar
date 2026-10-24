@@ -28,24 +28,34 @@ export function isReleased(e: Episode, today: Day): boolean {
   return e.release_date !== null && compare(fromISO(e.release_date), today) <= 0;
 }
 
+function hasBeenFilmed(filmedDate: string | null, today: Day): boolean {
+  return filmedDate !== null && compare(fromISO(filmedDate), today) <= 0;
+}
+
 interface DateSelectProps {
   today: Day;
   value: string | null;
   taken: Set<string>;
+  canAssign: boolean;
   onChange: (value: string | null) => void;
 }
 
-function DateSelect({ today, value, taken, onChange }: DateSelectProps) {
-  const options = upcomingReleases(today, SLOT_CHOICES)
-    .map(toISO)
-    .filter((iso) => iso === value || !taken.has(iso));
+function DateSelect({ today, value, taken, canAssign, onChange }: DateSelectProps) {
+  const options = canAssign
+    ? upcomingReleases(today, SLOT_CHOICES)
+        .map(toISO)
+        .filter((iso) => iso === value || !taken.has(iso))
+    : value
+      ? [value]
+      : [];
   return (
     <select
       value={value ?? ""}
+      disabled={!canAssign && value === null}
       onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
       aria-label="Release date"
     >
-      <option value="">Choose date</option>
+      <option value="">{canAssign ? "Choose date" : "Film first"}</option>
       {options.map((iso) => (
         <option key={iso} value={iso}>
           {formatDayShort(fromISO(iso))}
@@ -130,13 +140,22 @@ export function EpisodesTab({
         onChange={(e) => setDraftName(e.target.value)}
         aria-label="Episode name"
       />
-      <DateSelect today={today} value={draftDate} taken={taken} onChange={setDraftDate} />
+      <DateSelect
+        today={today}
+        value={draftDate}
+        taken={taken}
+        canAssign={hasBeenFilmed(draftFilmedDate || null, today)}
+        onChange={setDraftDate}
+      />
       <label className="filmed-date-field">
         <span>Filmed date</span>
         <input
           type="date"
           value={draftFilmedDate}
-          onChange={(e) => setDraftFilmedDate(e.target.value)}
+          onChange={(e) => {
+            setDraftFilmedDate(e.target.value);
+            if (!hasBeenFilmed(e.target.value || null, today)) setDraftDate(null);
+          }}
           aria-label="Filmed date"
         />
       </label>
@@ -162,13 +181,22 @@ export function EpisodesTab({
           onChange={(e) => setNewName(e.target.value)}
           aria-label="New episode name"
         />
-        <DateSelect today={today} value={newDate} taken={taken} onChange={setNewDate} />
+        <DateSelect
+          today={today}
+          value={newDate}
+          taken={taken}
+          canAssign={hasBeenFilmed(newFilmedDate || null, today)}
+          onChange={setNewDate}
+        />
         <label className="filmed-date-field">
           <span>Filmed date</span>
           <input
             type="date"
             value={newFilmedDate}
-            onChange={(e) => setNewFilmedDate(e.target.value)}
+            onChange={(e) => {
+              setNewFilmedDate(e.target.value);
+              if (!hasBeenFilmed(e.target.value || null, today)) setNewDate(null);
+            }}
             aria-label="Filmed date"
           />
         </label>

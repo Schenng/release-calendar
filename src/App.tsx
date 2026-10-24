@@ -6,7 +6,7 @@ import { Calendar } from "./components/Calendar";
 import { EpisodesTab, isReleased } from "./components/EpisodesTab";
 import { StatusPanel } from "./components/StatusPanel";
 import { useEpisodes } from "./hooks/useEpisodes";
-import { Day, fromLocalDate, sameDay, toISO } from "./lib/schedule";
+import { compare, Day, fromISO, fromLocalDate, sameDay, toISO } from "./lib/schedule";
 import { supabase } from "./lib/supabase";
 
 type Tab = "calendar" | "episodes";
@@ -107,7 +107,14 @@ export default function App() {
               session && selected ? (episodesByDate.get(toISO(selected)) ?? null) : null
             }
             unassigned={
-              session ? episodes.filter((e) => e.release_date === null) : undefined
+              session
+                ? episodes.filter(
+                    (e) =>
+                      e.release_date === null &&
+                      e.filmed_date !== null &&
+                      compare(fromISO(e.filmed_date), today) <= 0,
+                  )
+                : undefined
             }
             assignedDates={session ? new Set(episodesByDate.keys()) : undefined}
             onAssign={
