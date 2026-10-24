@@ -189,16 +189,10 @@ export function StatusPanel({
           </div>
         )}
         {s.kind === "behind" && (
-          <>
-            <div className="stat">
-              <dt>Still to film</dt>
-              <dd>{s.need}</dd>
-            </div>
-            <div className="stat wide">
-              <dt>Film by</dt>
-              <dd>{formatDayShort(s.filmBy)}</dd>
-            </div>
-          </>
+          <div className="stat wide">
+            <dt>Film by</dt>
+            <dd>{formatDayShort(s.filmBy)}</dd>
+          </div>
         )}
       </dl>
 
