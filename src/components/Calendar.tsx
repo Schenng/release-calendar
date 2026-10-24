@@ -71,9 +71,9 @@ export function Calendar({
         ))}
         {cells.map((day, i) => {
           if (!day) return <div key={`blank-${i}`} />;
-          const future = compare(day, today) > 0;
-          const clickable = future && isReleaseDay(day);
-          const out = clickable ? releasesOut(today, day) : null;
+          const isFuture = compare(day, today) > 0;
+          const clickable = isReleaseDay(day) && (isFuture || episodesByDate !== undefined);
+          const out = clickable && isFuture ? releasesOut(today, day) : null;
           const episodeName = episodesByDate?.get(toISO(day))?.name ?? null;
 
           // Logged in (episodesByDate present): only dates with an assigned
@@ -105,7 +105,7 @@ export function Calendar({
 
       <p className="legend">
         Click a highlighted <strong>Mon</strong>/<strong>Thu</strong> release date to check the
-        schedule. The badge is how many releases out that date is.
+        schedule. Signed-in users can also correct past releases.
       </p>
     </section>
   );

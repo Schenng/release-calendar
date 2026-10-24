@@ -1,5 +1,6 @@
 import { Episode } from "../hooks/useEpisodes";
 import {
+  compare,
   Day,
   formatDay,
   formatDayShort,
@@ -33,6 +34,48 @@ export function StatusPanel({
 }: Props) {
   if (!selected) {
     return <p className="status-hint">Select a release date to see where you stand.</p>;
+  }
+  if (compare(selected, today) <= 0) {
+    return (
+      <section className="status-panel history-panel">
+        <header className="status-header">
+          <h3>{formatDay(selected)}</h3>
+          <span className="verdict-pill">Past release</span>
+        </header>
+        {episode ? (
+          <p className="status-episode">
+            Episode assigned: <strong>{episode.name}</strong>
+            {onUnassign && (
+              <button
+                type="button"
+                className="auth-link unassign"
+                onClick={() => onUnassign(episode.id)}
+              >
+                Unassign
+              </button>
+            )}
+          </p>
+        ) : onAssign && unassigned && unassigned.length > 0 ? (
+          <div className="assign-block">
+            <p className="assign-label">Assign the episode that actually released:</p>
+            <div className="assign-options">
+              {unassigned.map((ep) => (
+                <button
+                  key={ep.id}
+                  type="button"
+                  className="episode-chip"
+                  onClick={() => onAssign(ep.id)}
+                >
+                  {ep.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="status-hint">No unassigned episodes are available for this date.</p>
+        )}
+      </section>
+    );
   }
   if (banked === null) {
     return (
