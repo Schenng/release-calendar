@@ -34,6 +34,11 @@ export default function App() {
   const estimatedEpisodes = unreleasedEpisodes.filter(
     (e) => e.filmed_date !== null && compare(fromISO(e.filmed_date), today) > 0,
   );
+  const estimatedBySelectedDate = selected
+    ? estimatedEpisodes.filter(
+        (e) => e.filmed_date !== null && compare(fromISO(e.filmed_date), selected) <= 0,
+      ).length
+    : estimatedEpisodes.length;
 
   // Logged in: only filmed episodes count as ready. Logged out: use the typed count.
   const parsed = Number.parseInt(bankedText, 10);
@@ -99,7 +104,7 @@ export default function App() {
           {session && (
             <p className="banked-summary">
               <strong>{readyEpisodes.length}</strong> videos ready ·{" "}
-              <strong>{estimatedEpisodes.length}</strong> videos to be filmed
+              <strong>{estimatedBySelectedDate}</strong> videos to be filmed
             </p>
           )}
 
@@ -122,7 +127,7 @@ export default function App() {
 
           <StatusPanel
             banked={banked}
-            estimatedVideos={session ? estimatedEpisodes.length : undefined}
+            estimatedVideos={session ? estimatedBySelectedDate : undefined}
             today={today}
             selected={selected}
             filmedEpisodes={
