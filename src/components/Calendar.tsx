@@ -20,6 +20,8 @@ interface Props {
   onSelect: (day: Day) => void;
   /** ISO date → assigned episode, for logged-in users. */
   episodesByDate?: Map<string, Episode>;
+  /** ISO dates when one or more episodes are scheduled to be filmed. */
+  filmingDates?: ReadonlySet<string>;
 }
 
 function daysInMonth(year: number, month: number): number {
@@ -34,6 +36,7 @@ export function Calendar({
   selected,
   onSelect,
   episodesByDate,
+  filmingDates,
 }: Props) {
   const { year, month } = visible;
   const firstDow = dayOfWeek({ year, month, day: 1 });
@@ -97,6 +100,7 @@ export function Calendar({
               coverage={coverage}
               selected={selected !== null && sameDay(day, selected)}
               episodeName={episodeName}
+              isFilmingDate={filmingDates?.has(toISO(day)) ?? false}
               onClick={() => onSelect(day)}
             />
           );
@@ -105,7 +109,7 @@ export function Calendar({
 
       <p className="legend">
         Click a highlighted <strong>Mon</strong>/<strong>Thu</strong> release date to check the
-        schedule. Signed-in users can also correct past releases.
+        schedule. Signed-in users can also correct past releases. Orange marks filming dates.
       </p>
     </section>
   );

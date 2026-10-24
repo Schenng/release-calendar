@@ -12,6 +12,7 @@ interface Props {
   selected: boolean;
   /** Name of the episode assigned to this date, if any (logged-in users). */
   episodeName: string | null;
+  isFilmingDate: boolean;
   onClick: () => void;
 }
 
@@ -24,6 +25,7 @@ export function DayCell({
   coverage,
   selected,
   episodeName,
+  isFilmingDate,
   onClick,
 }: Props) {
   const classes = ["day-cell"];
@@ -31,6 +33,7 @@ export function DayCell({
   if (isRelease) classes.push("release");
   if (selected) classes.push("selected");
   if (episodeName) classes.push("has-episode");
+  if (isFilmingDate) classes.push("filming-day");
   if (coverage) classes.push(coverage);
 
   const episode = episodeName && (

@@ -106,6 +106,11 @@ export default function App() {
               setSelected(selected && sameDay(day, selected) ? null : day)
             }
             episodesByDate={session ? episodesByDate : undefined}
+            filmingDates={
+              session
+                ? new Set(episodes.flatMap((e) => (e.filmed_date ? [e.filmed_date] : [])))
+                : undefined
+            }
           />
 
           <StatusPanel
