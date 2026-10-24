@@ -355,6 +355,17 @@ button.day-cell.selected {
   border-radius: 10px;
 }
 
+.episode-new input[type="date"],
+.episode-row input[type="date"] {
+  min-width: 0;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
 .episode-new select,
 .episode-row select {
   font: inherit;
@@ -401,6 +412,27 @@ button.day-cell.selected {
   padding: 8px 10px;
   border: 1px solid var(--line);
   border-radius: 10px;
+}
+
+.filmed-date-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.episode-new .filmed-date-field {
+  flex: 1 1 190px;
+}
+
+.episode-new .filmed-date-field input,
+.episode-row.editing .filmed-date-field input {
+  flex: 1;
+}
+
+.episode-row.editing .filmed-date-field {
+  flex: 1 1 100%;
 }
 
 .episode-date {

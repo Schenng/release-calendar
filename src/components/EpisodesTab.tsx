@@ -14,10 +14,10 @@ interface Props {
   episodes: Episode[];
   loading: boolean;
   error: string | null;
-  onCreate: (name: string, releaseDate: string | null) => Promise<boolean>;
+  onCreate: (name: string, releaseDate: string | null, filmedDate: string | null) => Promise<boolean>;
   onUpdate: (
     id: string,
-    fields: { name?: string; release_date?: string | null },
+    fields: { name?: string; release_date?: string | null; filmed_date?: string | null },
   ) => Promise<boolean>;
   onRemove: (id: string) => Promise<boolean>;
 }
@@ -66,9 +66,11 @@ export function EpisodesTab({
 }: Props) {
   const [newName, setNewName] = useState("");
   const [newDate, setNewDate] = useState<string | null>(null);
+  const [newFilmedDate, setNewFilmedDate] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draftDate, setDraftDate] = useState<string | null>(null);
+  const [draftFilmedDate, setDraftFilmedDate] = useState("");
   const [busy, setBusy] = useState(false);
 
   const taken = new Set(
@@ -84,9 +86,10 @@ export function EpisodesTab({
     const name = newName.trim();
     if (!name) return;
     setBusy(true);
-    if (await onCreate(name, newDate)) {
+    if (await onCreate(name, newDate, newFilmedDate || null)) {
       setNewName("");
       setNewDate(null);
+      setNewFilmedDate("");
     }
     setBusy(false);
   };
@@ -95,13 +98,18 @@ export function EpisodesTab({
     setEditingId(ep.id);
     setDraftName(ep.name);
     setDraftDate(ep.release_date);
+    setDraftFilmedDate(ep.filmed_date ?? "");
   };
 
   const saveEdit = async (ep: Episode) => {
     const name = draftName.trim();
     if (!name) return;
     setBusy(true);
-    if (await onUpdate(ep.id, { name, release_date: draftDate })) {
+    if (await onUpdate(ep.id, {
+      name,
+      release_date: draftDate,
+      filmed_date: draftFilmedDate || null,
+    })) {
       setEditingId(null);
     }
     setBusy(false);
@@ -113,6 +121,35 @@ export function EpisodesTab({
     await onRemove(ep.id);
     setBusy(false);
   };
+
+  const renderEditor = (ep: Episode) => (
+    <li key={ep.id} className="episode-row editing">
+      <input
+        type="text"
+        value={draftName}
+        onChange={(e) => setDraftName(e.target.value)}
+        aria-label="Episode name"
+      />
+      <DateSelect today={today} value={draftDate} taken={taken} onChange={setDraftDate} />
+      <label className="filmed-date-field">
+        <span>Filmed date</span>
+        <input
+          type="date"
+          value={draftFilmedDate}
+          onChange={(e) => setDraftFilmedDate(e.target.value)}
+          aria-label="Filmed date"
+        />
+      </label>
+      <div className="episode-actions">
+        <button type="button" className="auth-link" disabled={busy} onClick={() => saveEdit(ep)}>
+          Save
+        </button>
+        <button type="button" className="auth-link" onClick={() => setEditingId(null)}>
+          Cancel
+        </button>
+      </div>
+    </li>
+  );
 
   return (
     <section className="episodes">
@@ -126,6 +163,15 @@ export function EpisodesTab({
           aria-label="New episode name"
         />
         <DateSelect today={today} value={newDate} taken={taken} onChange={setNewDate} />
+        <label className="filmed-date-field">
+          <span>Filmed date</span>
+          <input
+            type="date"
+            value={newFilmedDate}
+            onChange={(e) => setNewFilmedDate(e.target.value)}
+            aria-label="Filmed date"
+          />
+        </label>
         <button type="submit" className="auth-submit" disabled={busy}>
           Add episode
         </button>
@@ -141,42 +187,15 @@ export function EpisodesTab({
         <ul className="episode-list">
           {banked.map((ep) =>
             editingId === ep.id ? (
-              <li key={ep.id} className="episode-row editing">
-                <input
-                  type="text"
-                  value={draftName}
-                  onChange={(e) => setDraftName(e.target.value)}
-                  aria-label="Episode name"
-                />
-                <DateSelect
-                  today={today}
-                  value={draftDate}
-                  taken={taken}
-                  onChange={setDraftDate}
-                />
-                <div className="episode-actions">
-                  <button
-                    type="button"
-                    className="auth-link"
-                    disabled={busy}
-                    onClick={() => saveEdit(ep)}
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    className="auth-link"
-                    onClick={() => setEditingId(null)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </li>
+              renderEditor(ep)
             ) : (
               <li key={ep.id} className="episode-row">
                 <span className="episode-name-text">{ep.name}</span>
                 <span className="episode-date">
                   {ep.release_date ? formatDayShort(fromISO(ep.release_date)) : "Unassigned"}
+                </span>
+                <span className="episode-date">
+                  Filmed: {ep.filmed_date ? formatDayShort(fromISO(ep.filmed_date)) : "—"}
                 </span>
                 <div className="episode-actions">
                   <button type="button" className="auth-link" onClick={() => startEdit(ep)}>
@@ -202,20 +221,30 @@ export function EpisodesTab({
           <h3 className="released-heading">Released</h3>
           <ul className="episode-list released">
             {released.map((ep) => (
-              <li key={ep.id} className="episode-row">
-                <span className="episode-name-text">{ep.name}</span>
-                <span className="episode-date">{formatDayShort(fromISO(ep.release_date!))}</span>
-                <div className="episode-actions">
-                  <button
-                    type="button"
-                    className="auth-link danger"
-                    disabled={busy}
-                    onClick={() => confirmRemove(ep)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
+              editingId === ep.id ? (
+                renderEditor(ep)
+              ) : (
+                <li key={ep.id} className="episode-row">
+                  <span className="episode-name-text">{ep.name}</span>
+                  <span className="episode-date">{formatDayShort(fromISO(ep.release_date!))}</span>
+                  <span className="episode-date">
+                    Filmed: {ep.filmed_date ? formatDayShort(fromISO(ep.filmed_date)) : "—"}
+                  </span>
+                  <div className="episode-actions">
+                    <button type="button" className="auth-link" onClick={() => startEdit(ep)}>
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="auth-link danger"
+                      disabled={busy}
+                      onClick={() => confirmRemove(ep)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              )
             ))}
           </ul>
         </>

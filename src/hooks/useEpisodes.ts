@@ -7,6 +7,8 @@ export interface Episode {
   name: string;
   /** ISO date ("YYYY-MM-DD") of the assigned release slot, or null if unassigned. */
   release_date: string | null;
+  /** ISO filming date ("YYYY-MM-DD"), which may be in the past or future. */
+  filmed_date: string | null;
 }
 
 export function useEpisodes(session: Session | null) {
@@ -24,7 +26,7 @@ export function useEpisodes(session: Session | null) {
     setLoading(true);
     const { data, error } = await supabase
       .from("episodes")
-      .select("id,name,release_date")
+      .select("id,name,release_date,filmed_date")
       .order("created_at");
     if (error) {
       setError(error.message);
@@ -49,16 +51,20 @@ export function useEpisodes(session: Session | null) {
     return true;
   };
 
-  const create = (name: string, releaseDate: string | null) =>
+  const create = (name: string, releaseDate: string | null, filmedDate: string | null) =>
     run(
       supabase.from("episodes").insert({
         user_id: userId,
         name,
         release_date: releaseDate,
+        filmed_date: filmedDate,
       }),
     );
 
-  const update = (id: string, fields: { name?: string; release_date?: string | null }) =>
+  const update = (
+    id: string,
+    fields: { name?: string; release_date?: string | null; filmed_date?: string | null },
+  ) =>
     run(supabase.from("episodes").update(fields).eq("id", id));
 
   const remove = (id: string) => run(supabase.from("episodes").delete().eq("id", id));
