@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Episode } from "../hooks/useEpisodes";
 import {
   Day,
@@ -32,7 +31,6 @@ export function StatusPanel({
   onAssign,
   onUnassign,
 }: Props) {
-  const [assignId, setAssignId] = useState("");
   if (!selected) {
     return <p className="status-hint">Select a release date to see where you stand.</p>;
   }
@@ -80,30 +78,20 @@ export function StatusPanel({
       )}
 
       {!episode && onAssign && unassigned && unassigned.length > 0 && (
-        <div className="assign-row">
-          <select
-            value={assignId}
-            onChange={(e) => setAssignId(e.target.value)}
-            aria-label="Episode to assign"
-          >
-            <option value="">Choose episode…</option>
+        <div className="assign-block">
+          <p className="assign-label">Assign an episode to this date:</p>
+          <div className="assign-options">
             {unassigned.map((ep) => (
-              <option key={ep.id} value={ep.id}>
+              <button
+                key={ep.id}
+                type="button"
+                className="episode-chip"
+                onClick={() => onAssign(ep.id)}
+              >
                 {ep.name}
-              </option>
+              </button>
             ))}
-          </select>
-          <button
-            type="button"
-            className="auth-submit"
-            disabled={assignId === ""}
-            onClick={() => {
-              onAssign(assignId);
-              setAssignId("");
-            }}
-          >
-            Assign to this date
-          </button>
+          </div>
         </div>
       )}
 

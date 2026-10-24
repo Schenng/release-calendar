@@ -100,7 +100,6 @@ export default function App() {
           />
 
           <StatusPanel
-            key={selected ? toISO(selected) : "none"}
             banked={banked}
             today={today}
             selected={selected}

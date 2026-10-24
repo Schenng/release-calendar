@@ -1,5 +1,5 @@
 :root {
-  --bg: #f7f7f5;
+  --bg: #e5e5e5;
   --panel: #ffffff;
   --ink: #1c1c1c;
   --muted: #8a8a86;
@@ -470,26 +470,38 @@ button.day-cell.selected {
   color: var(--red-ink);
 }
 
-.assign-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.assign-block {
   margin: 0 0 12px;
 }
 
-.assign-row select {
-  flex: 1 1 160px;
-  font: inherit;
+.assign-label {
+  margin: 0 0 8px;
   font-size: 0.9rem;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel);
 }
 
-.assign-row .auth-submit {
-  flex: 0 0 auto;
+.assign-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.episode-chip {
+  font: inherit;
   font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.episode-chip:active {
+  background: var(--bg);
 }
 
 .verdict-pill {
