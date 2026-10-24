@@ -176,7 +176,7 @@ export function StatusPanel({
         )}
         {assignedDates && (
           <div className="stat">
-            <dt>Unassigned</dt>
+            <dt>Edited unassigned videos</dt>
             <dd>{unassigned?.length ?? 0}</dd>
           </div>
         )}
