@@ -97,7 +97,7 @@ export function Calendar({
               key={day.day}
               day={day}
               isToday={sameDay(day, today)}
-              isPast={compare(day, today) < 0}
+              isPast={isRelease && compare(day, today) < 0}
               isRelease={isRelease}
               clickable={clickable}
               releasesOut={out}
