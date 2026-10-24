@@ -275,6 +275,13 @@ button.day-cell.filming-day {
   border-color: transparent;
 }
 
+.day-cell.past,
+button.day-cell.past {
+  background: #ededeb;
+  color: #8a8a86;
+  border-color: transparent;
+}
+
 button.day-cell.selected {
   outline: 2px solid var(--accent);
 }

@@ -3,6 +3,7 @@ import { Day } from "../lib/schedule";
 interface Props {
   day: Day;
   isToday: boolean;
+  isPast: boolean;
   isRelease: boolean;
   clickable: boolean;
   /** How many release slots out this date is; null when not a clickable release day. */
@@ -19,6 +20,7 @@ interface Props {
 export function DayCell({
   day,
   isToday,
+  isPast,
   isRelease,
   clickable,
   releasesOut,
@@ -30,6 +32,7 @@ export function DayCell({
 }: Props) {
   const classes = ["day-cell"];
   if (isToday) classes.push("today");
+  if (isPast) classes.push("past");
   if (isRelease) classes.push("release");
   if (selected) classes.push("selected");
   if (episodeName) classes.push("has-episode");
