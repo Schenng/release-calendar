@@ -27,10 +27,18 @@ export default function App() {
 
   const { episodes, loading, error, create, update, remove } = useEpisodes(session);
 
-  // Logged in: banked = number of unreleased episodes. Logged out: typed count.
+  const unreleasedEpisodes = episodes.filter((e) => !isReleased(e, today));
+  const readyEpisodes = unreleasedEpisodes.filter(
+    (e) => e.filmed_date !== null && compare(fromISO(e.filmed_date), today) <= 0,
+  );
+  const estimatedEpisodes = unreleasedEpisodes.filter(
+    (e) => e.filmed_date !== null && compare(fromISO(e.filmed_date), today) > 0,
+  );
+
+  // Logged in: only filmed episodes count as ready. Logged out: use the typed count.
   const parsed = Number.parseInt(bankedText, 10);
   const banked = session
-    ? episodes.filter((e) => !isReleased(e, today)).length
+    ? readyEpisodes.length
     : Number.isInteger(parsed) && parsed >= 0
       ? parsed
       : null;
@@ -83,7 +91,8 @@ export default function App() {
           {!session && <BankedInput value={bankedText} onChange={setBankedText} />}
           {session && (
             <p className="banked-summary">
-              <strong>{banked}</strong> episode{banked === 1 ? "" : "s"} banked
+              <strong>{readyEpisodes.length}</strong> videos ready ·{" "}
+              <strong>{estimatedEpisodes.length}</strong> estimated videos ready
             </p>
           )}
 
@@ -101,6 +110,7 @@ export default function App() {
 
           <StatusPanel
             banked={banked}
+            estimatedVideos={session ? estimatedEpisodes.length : undefined}
             today={today}
             selected={selected}
             episode={
@@ -108,15 +118,18 @@ export default function App() {
             }
             unassigned={
               session
-                ? episodes.filter(
-                    (e) =>
-                      e.release_date === null &&
-                      e.filmed_date !== null &&
-                      compare(fromISO(e.filmed_date), today) <= 0,
+                ? readyEpisodes.filter((e) => e.release_date === null)
+                : undefined
+            }
+            assignedDates={
+              session
+                ? new Set(
+                    readyEpisodes.flatMap((e) =>
+                      e.release_date === null ? [] : [e.release_date],
+                    ),
                   )
                 : undefined
             }
-            assignedDates={session ? new Set(episodesByDate.keys()) : undefined}
             onAssign={
               session && selected
                 ? (id) => update(id, { release_date: toISO(selected) })

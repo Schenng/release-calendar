@@ -10,6 +10,8 @@ import {
 
 interface Props {
   banked: number | null;
+  /** Episodes with future filming dates, not yet included in videos ready. */
+  estimatedVideos?: number;
   today: Day;
   selected: Day | null;
   /** Episode assigned to the selected date, if any (logged in). */
@@ -24,6 +26,7 @@ interface Props {
 
 export function StatusPanel({
   banked,
+  estimatedVideos,
   today,
   selected,
   episode,
@@ -147,6 +150,12 @@ export function StatusPanel({
           <dt>Videos ready</dt>
           <dd>{banked}</dd>
         </div>
+        {estimatedVideos !== undefined && (
+          <div className="stat">
+            <dt>Estimated videos ready</dt>
+            <dd>{estimatedVideos}</dd>
+          </div>
+        )}
         {assignedDates && (
           <div className="stat">
             <dt>Unassigned</dt>
