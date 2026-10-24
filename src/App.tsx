@@ -99,7 +99,7 @@ export default function App() {
           {session && (
             <p className="banked-summary">
               <strong>{readyEpisodes.length}</strong> videos ready ·{" "}
-              <strong>{estimatedEpisodes.length}</strong> estimated videos ready
+              <strong>{estimatedEpisodes.length}</strong> videos to be filmed
             </p>
           )}
 

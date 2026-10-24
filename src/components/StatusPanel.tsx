@@ -176,7 +176,7 @@ export function StatusPanel({
         )}
         {estimatedVideos !== undefined && (
           <div className="stat">
-            <dt>Estimated videos ready</dt>
+            <dt>Videos to be filmed</dt>
             <dd>{estimatedVideos}</dd>
           </div>
         )}
