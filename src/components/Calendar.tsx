@@ -75,8 +75,11 @@ export function Calendar({
         {cells.map((day, i) => {
           if (!day) return <div key={`blank-${i}`} />;
           const isFuture = compare(day, today) > 0;
-          const clickable = isReleaseDay(day) && (isFuture || episodesByDate !== undefined);
-          const out = clickable && isFuture ? releasesOut(today, day) : null;
+          const isRelease = isReleaseDay(day);
+          const isFilmingDate = filmingDates?.has(toISO(day)) ?? false;
+          const clickable =
+            (isRelease && (isFuture || episodesByDate !== undefined)) || isFilmingDate;
+          const out = clickable && isRelease && isFuture ? releasesOut(today, day) : null;
           const episodeName = episodesByDate?.get(toISO(day))?.name ?? null;
 
           // Logged in (episodesByDate present): only dates with an assigned
@@ -94,13 +97,13 @@ export function Calendar({
               key={day.day}
               day={day}
               isToday={sameDay(day, today)}
-              isRelease={isReleaseDay(day)}
+              isRelease={isRelease}
               clickable={clickable}
               releasesOut={out}
               coverage={coverage}
               selected={selected !== null && sameDay(day, selected)}
               episodeName={episodeName}
-              isFilmingDate={filmingDates?.has(toISO(day)) ?? false}
+              isFilmingDate={isFilmingDate}
               onClick={() => onSelect(day)}
             />
           );
@@ -109,7 +112,7 @@ export function Calendar({
 
       <p className="legend">
         Click a highlighted <strong>Mon</strong>/<strong>Thu</strong> release date to check the
-        schedule. Signed-in users can also correct past releases. Orange marks filming dates.
+        schedule. Signed-in users can also correct past releases. Orange filming dates are clickable.
       </p>
     </section>
   );

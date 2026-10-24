@@ -4,6 +4,8 @@ import {
   Day,
   formatDay,
   formatDayShort,
+  fromISO,
+  isReleaseDay,
   status,
   statusWithAssignments,
 } from "../lib/schedule";
@@ -16,6 +18,8 @@ interface Props {
   selected: Day | null;
   /** Episode assigned to the selected date, if any (logged in). */
   episode?: Episode | null;
+  /** Episodes with a filmed date matching the selected date. */
+  filmedEpisodes?: Episode[];
   /** Unassigned episodes offered for assignment to the selected date (logged in). */
   unassigned?: Episode[];
   /** ISO dates that have an assigned episode; enables assignment-aware math. */
@@ -30,6 +34,7 @@ export function StatusPanel({
   today,
   selected,
   episode,
+  filmedEpisodes,
   unassigned,
   assignedDates,
   onAssign,
@@ -38,6 +43,20 @@ export function StatusPanel({
   if (!selected) {
     return <p className="status-hint">Select a release date to see where you stand.</p>;
   }
+  if (!isReleaseDay(selected)) {
+    const isFutureFilmingDate = compare(selected, today) > 0;
+    return (
+      <section className="status-panel filming-panel">
+        <header className="status-header">
+          <h3>{formatDay(selected)}</h3>
+          <span className="verdict-pill">
+            {isFutureFilmingDate ? "Planned filming" : "Filming date"}
+          </span>
+        </header>
+        <FilmedEpisodeList episodes={filmedEpisodes ?? []} future={isFutureFilmingDate} />
+      </section>
+    );
+  }
   if (compare(selected, today) <= 0) {
     return (
       <section className="status-panel history-panel">
@@ -45,6 +64,9 @@ export function StatusPanel({
           <h3>{formatDay(selected)}</h3>
           <span className="verdict-pill">Past release</span>
         </header>
+        {filmedEpisodes && filmedEpisodes.length > 0 && (
+          <FilmedEpisodeList episodes={filmedEpisodes} future={false} />
+        )}
         {episode ? (
           <p className="status-episode">
             Episode assigned: <strong>{episode.name}</strong>
@@ -123,6 +145,10 @@ export function StatusPanel({
         </p>
       )}
 
+      {filmedEpisodes && filmedEpisodes.length > 0 && (
+        <FilmedEpisodeList episodes={filmedEpisodes} future={compare(selected, today) > 0} />
+      )}
+
       {!episode && onAssign && unassigned && unassigned.length > 0 && (
         <div className="assign-block">
           <p className="assign-label">Assign an episode to this date:</p>
@@ -187,5 +213,31 @@ export function StatusPanel({
           "Every release through this date is covered — no filming needed."}
       </p>
     </section>
+  );
+}
+
+function FilmedEpisodeList({ episodes, future }: { episodes: Episode[]; future: boolean }) {
+  return (
+    <div className="filmed-episodes">
+      <p className="assign-label">
+        {future ? "Episodes scheduled to be filmed:" : "Episodes filmed:"}
+      </p>
+      {episodes.length > 0 ? (
+        <ul>
+          {episodes.map((ep) => (
+            <li key={ep.id}>
+              <strong>{ep.name}</strong>
+              <span>
+                {ep.release_date
+                  ? `Release: ${formatDayShort(fromISO(ep.release_date))}`
+                  : "No release date assigned"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="status-hint">No episodes are recorded for this filming date.</p>
+      )}
+    </div>
   );
 }

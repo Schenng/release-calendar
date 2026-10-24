@@ -46,6 +46,13 @@ export default function App() {
   const episodesByDate = new Map(
     episodes.flatMap((e) => (e.release_date !== null ? [[e.release_date, e] as const] : [])),
   );
+  const filmedEpisodesByDate = new Map<string, (typeof episodes)[number][]>();
+  for (const episode of episodes) {
+    if (episode.filmed_date === null) continue;
+    const filmedThatDay = filmedEpisodesByDate.get(episode.filmed_date) ?? [];
+    filmedThatDay.push(episode);
+    filmedEpisodesByDate.set(episode.filmed_date, filmedThatDay);
+  }
 
   return (
     <main className="app">
@@ -118,6 +125,11 @@ export default function App() {
             estimatedVideos={session ? estimatedEpisodes.length : undefined}
             today={today}
             selected={selected}
+            filmedEpisodes={
+              session && selected
+                ? filmedEpisodesByDate.get(toISO(selected)) ?? []
+                : undefined
+            }
             episode={
               session && selected ? (episodesByDate.get(toISO(selected)) ?? null) : null
             }

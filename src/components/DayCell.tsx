@@ -41,12 +41,13 @@ export function DayCell({
       {episodeName}
     </span>
   );
+  const labels = episode && <div className="day-cell-labels">{episode}</div>;
 
   if (!clickable) {
     return (
       <div className={classes.join(" ")}>
         <span className="day-number">{day.day}</span>
-        {episode}
+        {labels}
       </div>
     );
   }
@@ -55,7 +56,7 @@ export function DayCell({
     <button type="button" className={classes.join(" ")} onClick={onClick}>
       <span className="day-number">{day.day}</span>
       {releasesOut !== null && <span className="badge">{releasesOut}</span>}
-      {episode}
+      {labels}
     </button>
   );
 }

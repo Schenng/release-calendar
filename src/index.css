@@ -288,11 +288,17 @@ button.day-cell.selected {
   opacity: 0.75;
 }
 
-.day-cell .episode-label {
+.day-cell-labels {
   position: absolute;
   bottom: 3px;
   left: 3px;
   right: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.day-cell-labels .episode-label {
   font-size: 0.55rem;
   font-weight: 600;
   line-height: 1.2;
@@ -303,7 +309,7 @@ button.day-cell.selected {
 }
 
 .day-cell.has-episode .day-number {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
 }
 
 .legend {
@@ -502,6 +508,32 @@ button.day-cell.selected {
 .status-episode {
   margin: 0 0 12px;
   font-size: 0.9rem;
+}
+
+.filmed-episodes {
+  margin: 0 0 12px;
+}
+
+.filmed-episodes ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.filmed-episodes li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+  font-size: 0.9rem;
+}
+
+.filmed-episodes li span {
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 .auth-link.unassign {
