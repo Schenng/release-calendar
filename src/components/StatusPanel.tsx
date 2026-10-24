@@ -1,7 +1,9 @@
 import { Episode } from "../hooks/useEpisodes";
 import {
+  addDays,
   compare,
   Day,
+  EDIT_LEAD_DAYS,
   formatDay,
   formatDayShort,
   fromISO,
@@ -22,6 +24,8 @@ interface Props {
   filmedEpisodes?: Episode[];
   /** Unassigned episodes offered for assignment to the selected date (logged in). */
   unassigned?: Episode[];
+  /** Unassigned episodes with future filming dates, used in the forecast when in time. */
+  estimatedUnassigned?: Episode[];
   /** ISO dates that have an assigned episode; enables assignment-aware math. */
   assignedDates?: ReadonlySet<string>;
   onAssign?: (episodeId: string) => void;
@@ -36,6 +40,7 @@ export function StatusPanel({
   episode,
   filmedEpisodes,
   unassigned,
+  estimatedUnassigned,
   assignedDates,
   onAssign,
   onUnassign,
@@ -111,8 +116,17 @@ export function StatusPanel({
     );
   }
 
+  const filmingDeadline = addDays(selected, -EDIT_LEAD_DAYS);
+  const estimatesReadyByDeadline = (estimatedUnassigned ?? []).filter(
+    (ep) => ep.filmed_date !== null && compare(fromISO(ep.filmed_date), filmingDeadline) <= 0,
+  ).length;
   const s = assignedDates
-    ? statusWithAssignments(unassigned?.length ?? 0, assignedDates, today, selected)
+    ? statusWithAssignments(
+        (unassigned?.length ?? 0) + estimatesReadyByDeadline,
+        assignedDates,
+        today,
+        selected,
+      )
     : status(banked, today, selected);
   const videos = (n: number) => (n === 1 ? "video" : "videos");
 
@@ -196,7 +210,7 @@ export function StatusPanel({
         {s.kind === "ahead" &&
           `You're ahead of schedule by ${s.surplus} ${videos(s.surplus)} for this date.`}
         {s.kind === "onSchedule" &&
-          "Every release through this date is covered — no filming needed."}
+          "Every release through this date is covered by filmed or scheduled episodes."}
       </p>
     </section>
   );
