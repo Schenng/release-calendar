@@ -168,10 +168,6 @@ export function StatusPanel({
       )}
 
       <dl className="stats">
-        <div className="stat">
-          <dt>Videos ready</dt>
-          <dd>{banked}</dd>
-        </div>
         {estimatedVideos !== undefined && (
           <div className="stat">
             <dt>Estimated videos ready</dt>
