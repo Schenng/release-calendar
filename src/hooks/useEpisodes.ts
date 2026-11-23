@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import { compare, fromISO, fromLocalDate } from "../lib/schedule";
 
 export interface Episode {
   id: string;
@@ -17,10 +16,6 @@ export function useEpisodes(session: Session | null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const userId = session?.user.id ?? null;
-  const today = fromLocalDate(new Date());
-
-  const hasBeenFilmed = (filmedDate: string | null | undefined) =>
-    Boolean(filmedDate && compare(fromISO(filmedDate), today) <= 0);
 
   const load = useCallback(async () => {
     if (!userId) {
@@ -57,10 +52,6 @@ export function useEpisodes(session: Session | null) {
   };
 
   const create = (name: string, releaseDate: string | null, filmedDate: string | null) => {
-    if (releaseDate !== null && !hasBeenFilmed(filmedDate)) {
-      setError("Film the episode before assigning a release date.");
-      return Promise.resolve(false);
-    }
     return run(
       supabase.from("episodes").insert({
         user_id: userId,
@@ -75,13 +66,6 @@ export function useEpisodes(session: Session | null) {
     id: string,
     fields: { name?: string; release_date?: string | null; filmed_date?: string | null },
   ) => {
-    const current = episodes.find((episode) => episode.id === id);
-    const releaseDate = fields.release_date === undefined ? current?.release_date : fields.release_date;
-    const filmedDate = fields.filmed_date === undefined ? current?.filmed_date : fields.filmed_date;
-    if (releaseDate !== null && releaseDate !== undefined && !hasBeenFilmed(filmedDate)) {
-      setError("Film the episode before assigning a release date.");
-      return false;
-    }
     return run(supabase.from("episodes").update(fields).eq("id", id));
   };
 
