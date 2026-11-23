@@ -275,6 +275,13 @@ button.day-cell.filming-day {
   border-color: transparent;
 }
 
+/* A shoot and release on the same date split the cell between both colors. */
+.day-cell.release.filming-day,
+button.day-cell.release.filming-day {
+  background: linear-gradient(to right, #ffedd5 0 50%, var(--green-bg) 50% 100%);
+  color: var(--ink);
+}
+
 .day-cell.past,
 button.day-cell.past {
   background: #ededeb;
