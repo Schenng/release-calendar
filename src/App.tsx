@@ -63,7 +63,7 @@ export default function App() {
     <main className="app">
       <header className="app-header">
         <div>
-          <h1>Film Calendar</h1>
+          <h1>60Second Dash</h1>
           <p className="tagline">Releases every Monday &amp; Thursday</p>
         </div>
         <AuthPanel session={session} />
