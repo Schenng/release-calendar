@@ -148,6 +148,11 @@ export default function App() {
                 ? estimatedEpisodes.filter((e) => e.release_date === null)
                 : undefined
             }
+            estimatedAssigned={
+              session
+                ? estimatedEpisodes.filter((e) => e.release_date !== null)
+                : undefined
+            }
             assignedDates={
               session
                 ? new Set(

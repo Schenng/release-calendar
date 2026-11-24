@@ -26,6 +26,8 @@ interface Props {
   unassigned?: Episode[];
   /** Unassigned episodes with future filming dates, used in the forecast when in time. */
   estimatedUnassigned?: Episode[];
+  /** Assigned episodes with future filming dates, counted when filmed by the selected deadline. */
+  estimatedAssigned?: Episode[];
   /** ISO dates that have an assigned episode; enables assignment-aware math. */
   assignedDates?: ReadonlySet<string>;
   onAssign?: (episodeId: string) => void;
@@ -41,6 +43,7 @@ export function StatusPanel({
   filmedEpisodes,
   unassigned,
   estimatedUnassigned,
+  estimatedAssigned,
   assignedDates,
   onAssign,
   onUnassign,
@@ -120,10 +123,21 @@ export function StatusPanel({
   const estimatesReadyByDeadline = (estimatedUnassigned ?? []).filter(
     (ep) => ep.filmed_date !== null && compare(fromISO(ep.filmed_date), filmingDeadline) <= 0,
   ).length;
+  const assignedEstimatesReadyByDeadline = (estimatedAssigned ?? []).flatMap((ep) =>
+    ep.release_date !== null &&
+    ep.filmed_date !== null &&
+    compare(fromISO(ep.filmed_date), filmingDeadline) <= 0
+      ? [ep.release_date]
+      : [],
+  );
+  const eligibleAssignedDates = new Set([
+    ...(assignedDates ?? []),
+    ...assignedEstimatesReadyByDeadline,
+  ]);
   const s = assignedDates
     ? statusWithAssignments(
         (unassigned?.length ?? 0) + estimatesReadyByDeadline,
-        assignedDates,
+        eligibleAssignedDates,
         today,
         selected,
       )
