@@ -147,6 +147,12 @@ export function StatusPanel({
       {episode && (
         <p className="status-episode">
           Scheduled episode: <strong>{episode.name}</strong>
+          <span className="episode-filmed-date">
+            Filmed: {" "}
+            {episode.filmed_date
+              ? formatDayShort(fromISO(episode.filmed_date))
+              : "Not filmed yet"}
+          </span>
           {onUnassign && (
             <button
               type="button"

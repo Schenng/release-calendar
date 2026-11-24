@@ -524,6 +524,16 @@ button.day-cell.selected {
   font-size: 0.9rem;
 }
 
+.episode-filmed-date {
+  margin-left: 0.45em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--red-ink);
+  color: #fff;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
 .filmed-episodes {
   margin: 0 0 12px;
 }
